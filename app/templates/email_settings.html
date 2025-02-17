@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Email Settings{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-bold mb-4">ZeptoEmail Settings</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mb-4 p-4 rounded {% if category == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" class="space-y-4">
+        <div>
+            <label for="api_key" class="block text-sm font-medium text-gray-700">ZeptoEmail API Key</label>
+            <input type="password" name="api_key" id="api_key" value="{{ config.api_key if config else '' }}" 
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+        </div>
+
+        <div>
+            <label for="from_email" class="block text-sm font-medium text-gray-700">From Email</label>
+            <input type="email" name="from_email" id="from_email" value="{{ config.from_email if config else '' }}"
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+        </div>
+
+        <div class="mb-4 p-4 bg-gray-100 rounded">
+            <p class="text-sm text-gray-700">Alerts will be sent to your account email: <strong>{{ user.email }}</strong></p>
+        </div>
+
+        <div class="flex justify-between items-center">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Save Settings
+            </button>
+            {% if config %}
+                <button type="button" id="test-email" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    Send Test Email
+                </button>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+{% if config %}
+<script>
+document.getElementById('test-email').addEventListener('click', function() {
+    fetch('/test_email', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Test email sent successfully!');
+            } else {
+                alert('Failed to send test email: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error sending test email: ' + error);
+        });
+});
+</script>
+{% endif %}
+{% endblock %}

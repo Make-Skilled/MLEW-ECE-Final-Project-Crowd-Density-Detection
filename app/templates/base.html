@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>{% block title %}Crowd Monitoring{% endblock %}</title>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-blue-600 p-4 text-white flex justify-between">
+        <a href="/" class="text-lg font-bold">Crowd Monitoring</a>
+        <div>
+            {% if session.user_id %}
+                <a href="{{ url_for('admin') }}" class="px-3">Admin Panel</a>
+                <a href="{{ url_for('camera') }}" class="px-3">Live Feed</a>
+                <a href="{{ url_for('logout') }}" class="px-3">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="px-3">Login</a>
+                <a href="{{ url_for('signup') }}" class="px-3">Signup</a>
+            {% endif %}
+        </div>
+    </nav>
+    <div class="container mx-auto mt-6 p-4">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

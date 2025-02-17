@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto space-y-6">
+    <!-- Crowd Limit Settings -->
+    <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-bold">Crowd Limit Settings</h2>
+        <p class="text-gray-600 mb-4">Set the maximum number of allowed persons.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-4 p-4 rounded {% if category == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="mb-4">
+                <label class="block text-gray-700">Max Allowed People</label>
+                <input type="number" name="max_people" value="{{ limit.max_people if limit else '' }}" 
+                       class="w-full p-2 border rounded" required>
+            </div>
+            <button type="submit" class="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600">Save Limit</button>
+        </form>
+
+        {% if limit %}
+        <p class="mt-4 text-red-600">Current Limit: {{ limit.max_people }} persons</p>
+        {% endif %}
+    </div>
+
+    <!-- Email Settings Link -->
+    <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-bold mb-4">Email Notifications</h2>
+        <p class="text-gray-600 mb-4">Configure ZeptoEmail settings for crowd limit alerts.</p>
+        <a href="{{ url_for('email_settings') }}" 
+           class="block w-full bg-blue-500 text-white text-center p-2 rounded hover:bg-blue-600">
+            Configure Email Settings
+        </a>
+    </div>
+</div>
+{% endblock %}

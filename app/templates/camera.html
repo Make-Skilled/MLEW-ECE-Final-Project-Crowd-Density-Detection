@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Live Camera Feed{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-bold text-center">Live Crowd Monitoring</h2>
+
+    <div class="text-center mt-4">
+        <p class="text-lg font-semibold">Current People Count: <span id="people-count">0</span></p>
+        <p class="text-red-500 font-bold" id="alert-msg" style="display: none;">⚠ ALERT: Crowd Limit Exceeded!</p>
+    </div>
+
+    <div class="flex flex-col items-center mt-4 space-y-4">
+        <video id="camera-feed" class="rounded-lg shadow-lg border" autoplay playsinline></video>
+        <canvas id="canvas" style="display: none;"></canvas>
+        <button id="start-camera" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Start Camera</button>
+    </div>
+</div>
+
+<script>
+    let stream = null;
+    const video = document.getElementById('camera-feed');
+    const canvas = document.getElementById('canvas');
+    const startButton = document.getElementById('start-camera');
+
+    // Set initial canvas size
+    canvas.width = 640;  // Standard video width
+    canvas.height = 480; // Standard video height
+
+    startButton.addEventListener('click', async () => {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'environment', // Use back camera on mobile devices
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                }
+            });
+            video.srcObject = stream;
+            video.play();
+            startButton.style.display = 'none';
+            
+            // Wait for video to be ready
+            video.addEventListener('loadedmetadata', () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                startProcessing();
+            });
+        } catch (err) {
+            console.error('Error accessing camera:', err);
+            alert('Error accessing camera. Please ensure you have granted camera permissions.');
+        }
+    });
+
+    function startProcessing() {
+        const context = canvas.getContext('2d');
+        
+        function processFrame() {
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob(blob => {
+                    const formData = new FormData();
+                    formData.append('frame', blob);
+                    
+                    fetch('/process_frame', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('people-count').innerText = data.people_count;
+                        
+                        let maxAllowed = {{ limit.max_people if limit else 10 }};
+                        if (data.people_count > maxAllowed) {
+                            document.getElementById('alert-msg').style.display = 'block';
+                        } else {
+                            document.getElementById('alert-msg').style.display = 'none';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                }, 'image/jpeg', 0.8);
+            }
+        }
+
+        // Process frame every second
+        setInterval(processFrame, 1000);
+    }
+</script>
+{% endblock %}
